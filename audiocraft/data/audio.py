@@ -145,7 +145,6 @@ def audio_read(filepath: tp.Union[str, Path], seek_time: float = 0.,
 
 
 def _piping_to_ffmpeg(out_path: tp.Union[str, Path], wav: torch.Tensor, sample_rate: int, flags: tp.List[str]):
-    
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger(__name__)
     logger.debug(f"wav tensor shape: {wav.shape}, dtype: {wav.dtype}")
@@ -162,12 +161,12 @@ def _piping_to_ffmpeg(out_path: tp.Union[str, Path], wav: torch.Tensor, sample_r
     try:
         # Ensure the tensor is on CPU, detached, and in float32 format
         wav_cpu = wav.cpu().detach().float()
-        # Convert to numpy array
-        wav_np = wav_cpu.numpy()
-        # Apply f32_pcm, transpose, and convert to bytes
-        input_ = f32_pcm(wav_np).T.tobytes()
+        # Apply f32_pcm directly to the PyTorch tensor
+        wav_f32 = f32_pcm(wav_cpu)
+        # Convert to bytes directly from PyTorch tensor
+        input_ = wav_f32.transpose(0, 1).contiguous().data.numpy().tobytes()
     except Exception as e:
-        print(f"Error in tensor conversion: {e}")
+        logger.error(f"Error in tensor conversion: {e}")
         # Fallback method if the above fails
         input_ = wav.cpu().detach().numpy().tobytes()
     sp.run(command, input=input_, check=True)
