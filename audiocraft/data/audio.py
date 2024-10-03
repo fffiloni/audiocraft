@@ -152,7 +152,7 @@ def _piping_to_ffmpeg(out_path: tp.Union[str, Path], wav: torch.Tensor, sample_r
         '-loglevel', 'error',
         '-y', '-f', 'f32le', '-ar', str(sample_rate), '-ac', str(wav.shape[0]),
         '-i', '-'] + flags + [str(out_path)]
-    input_ = f32_pcm(wav).t().detach().cpu().to_numpy().tobytes()
+    input_ = f32_pcm(wav).t().detach().cpu().numpy().tobytes()
     sp.run(command, input=input_, check=True)
 
 
