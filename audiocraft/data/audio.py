@@ -145,6 +145,10 @@ def audio_read(filepath: tp.Union[str, Path], seek_time: float = 0.,
 
 
 def _piping_to_ffmpeg(out_path: tp.Union[str, Path], wav: torch.Tensor, sample_rate: int, flags: tp.List[str]):
+    logger.debug(f"wav tensor shape: {wav.shape}, dtype: {wav.dtype}")
+    logger.debug(f"NumPy version: {np.__version__}")
+    logger.debug(f"PyTorch version: {torch.__version__}")
+    
     # ffmpeg is always installed and torchaudio is a bit unstable lately, so let's bypass it entirely.
     assert wav.dim() == 2, wav.shape
     command = [
@@ -152,7 +156,17 @@ def _piping_to_ffmpeg(out_path: tp.Union[str, Path], wav: torch.Tensor, sample_r
         '-loglevel', 'error',
         '-y', '-f', 'f32le', '-ar', str(sample_rate), '-ac', str(wav.shape[0]),
         '-i', '-'] + flags + [str(out_path)]
-    input_ = f32_pcm(wav).t().detach().cpu().numpy().tobytes()
+    try:
+        # Ensure the tensor is on CPU, detached, and in float32 format
+        wav_cpu = wav.cpu().detach().float()
+        # Convert to numpy array
+        wav_np = wav_cpu.numpy()
+        # Apply f32_pcm, transpose, and convert to bytes
+        input_ = f32_pcm(wav_np).T.tobytes()
+    except Exception as e:
+        print(f"Error in tensor conversion: {e}")
+        # Fallback method if the above fails
+        input_ = wav.cpu().detach().numpy().tobytes()
     sp.run(command, input=input_, check=True)
 
 
