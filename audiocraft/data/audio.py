@@ -145,6 +145,9 @@ def audio_read(filepath: tp.Union[str, Path], seek_time: float = 0.,
 
 
 def _piping_to_ffmpeg(out_path: tp.Union[str, Path], wav: torch.Tensor, sample_rate: int, flags: tp.List[str]):
+    
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
     logger.debug(f"wav tensor shape: {wav.shape}, dtype: {wav.dtype}")
     logger.debug(f"NumPy version: {np.__version__}")
     logger.debug(f"PyTorch version: {torch.__version__}")
